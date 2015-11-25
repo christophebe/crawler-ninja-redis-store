@@ -1,0 +1,22 @@
+{
+  "name": "crawler-ninja-redis-store",
+  "version": "1.0.0",
+  "description": "Redis store for Crawler.ninja",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "crawler-ninja-logger": "*",
+    "crawler-ninja-uri": "*",
+    "ioredis": "^1.11.0",
+    "underscore": "^1.8.3"
+  },
+  "devDependencies": {
+    "crawler-ninja": "*",
+    "express": "4.12.4",
+    "serve-static": "*"
+  }
+}
