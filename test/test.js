@@ -10,7 +10,7 @@ var testSite  = require("./website/start.js").site;
 describe('Redis Store tests', function() {
 
 
-        it('Audit Test', function(done) {
+        it('Test', function(done) {
           this.timeout(100000);
           var options = {
             //storeModuleName : "../index.js",
@@ -23,8 +23,8 @@ describe('Redis Store tests', function() {
 
           var rs = new redisStore.Store();
           crawler.setStore(rs);
-          //crawler.queue({url : "http://localhost:9999/index.html"});
-          crawler.queue("http://www.cirh.ht/");
+          crawler.queue({url : "http://localhost:9999/index.html"});
+
 
         });
 
