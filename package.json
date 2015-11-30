@@ -1,6 +1,6 @@
 {
   "name": "crawler-ninja-redis-store",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "Redis store for Crawler.ninja",
   "main": "index.js",
   "scripts": {
@@ -12,6 +12,7 @@
     "crawler-ninja-logger": "*",
     "crawler-ninja-uri": "*",
     "ioredis": "^1.11.0",
+    "redis": "^2.4.2",
     "underscore": "^1.8.3"
   },
   "devDependencies": {

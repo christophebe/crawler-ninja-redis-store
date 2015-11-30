@@ -4,7 +4,7 @@
  *  Redis implementation for a crawl persistence store
  *
  */
-var Redis  = require("ioredis");
+var redis  = require("redis");
 var _      = require("underscore");
 var URI    = require("crawler-ninja-uri");
 var log    = require("crawler-ninja-logger");
@@ -16,17 +16,7 @@ var SET_HISTORY = "history";
 var HASH_DEPTH = "depth";
 
 var Store = function (params) {
-    //TODO : check if Redis is running correctly
-    this.redis = new Redis(params);
-
-    //TODO : Replace a flush by a more robust solution :
-    // - How to keep crawl data ?
-    // - create an id for each crawl ?
-    // - use a different DB ?
-    // - How to restart a crawl after a failure ?
-    console.log("Delete the Redis data");
-    this.redis.flushdb();
-
+    this.client = redis.createClient(params);
 };
 
 /**
@@ -38,12 +28,12 @@ var Store = function (params) {
  *
  */
 Store.prototype.checkInCrawlHistory = function(url, callback) {
-       this.redis.pipeline()
-                 .sismember(SET_HISTORY, url)
-                 .sadd(SET_HISTORY, url)
-                 .exec(function (error, result) {
-                    callback(error, result[0][1] === 1);
-                  });
+        this.client.multi()
+            .sismember(SET_HISTORY, url)
+            .sadd(SET_HISTORY, url)
+            .exec(function (error, result) {
+               callback(error, result[0] === 1);
+             });
 };
 
 
@@ -54,19 +44,19 @@ Store.prototype.checkInCrawlHistory = function(url, callback) {
  * @param callback(error)
  */
 Store.prototype.removeFromHistory = function(url, callback) {
-   this.redis.srem(SET_HISTORY, url, callback);
+   this.client.srem(SET_HISTORY, url, callback);
 
 };
 
 Store.prototype.getDepth = function (url, callback) {
 
-  this.redis.hget(HASH_DEPTH, url, function(error, value){
+  this.client.hget(HASH_DEPTH, url, function(error, value){
 
       if (value === null) {
         value = 0;
       }
       else {
-        value = Number(value); 
+        value = Number(value);
       }
       callback(error, value);
   });
@@ -74,52 +64,48 @@ Store.prototype.getDepth = function (url, callback) {
 };
 
 Store.prototype.setDepth = function (url, depth, callback) {
-    this.redis.hset(HASH_DEPTH, url, depth, callback);
+    this.client.hset(HASH_DEPTH, url, depth, callback);
 };
 
 
 Store.prototype.addStartUrls = function(urls, callback) {
-
-  this.redis.pipeline([
-    ['sadd', SET_START_FROM_HOSTS, _.map(urls, function(url){ return URI.host(url); })],
-    ['sadd', SET_START_FROM_DOMAINS, _.map(urls, function(url){ return URI.domain(url); })]
-
-  ]).exec(function (error, results) {
-      callback(error);
-  });
-
+  this.client.multi()
+      .sadd(SET_START_FROM_HOSTS, _.map(urls, function(url){ return URI.host(url); }))
+      .sadd(SET_START_FROM_DOMAINS, _.map(urls, function(url){ return URI.domain(url); }))
+      .exec(function (error, result) {
+         callback(error);
+       });
 };
 
 
 Store.prototype.isStartFromUrl = function(parentUri, link, callback) {
 
+    this.client.multi()
+        .sismember(SET_START_FROM_HOSTS, URI.host(parentUri))
+        .sismember(SET_START_FROM_DOMAINS, URI.domain(parentUri))
+        .sismember(SET_START_FROM_HOSTS, URI.host(link))
+        .sismember(SET_START_FROM_DOMAINS, URI.domain(link))
+        .exec(function (error, results) {
 
-    this.redis.pipeline([
-      ['sismember', SET_START_FROM_HOSTS, URI.host(parentUri)],
-      ['sismember', SET_START_FROM_DOMAINS, URI.domain(parentUri)],
-      ['sismember', SET_START_FROM_HOSTS, URI.host(link)],
-      ['sismember', SET_START_FROM_DOMAINS, URI.domain(link)]
-
-    ]).exec(function (error, results) {
-      //console.log("RESULT", results);
-      if (error) {
-        return callback(error);
-      }
-      callback(null,
-          {
-            parentUri : {
-              isStartFromHost : results[0][1] === 1,
-              isStartFromDomain : results[1][1] === 1
-            },
-            link : {
-              isStartFromHost : results[2][1] === 1,
-              isStartFromDomain : results[3][1] === 1
+            //console.log("RESULT >>", results);
+            if (error) {
+              return callback(error);
             }
+            callback(null,
+                {
+                  parentUri : {
+                    isStartFromHost : results[0] === 1,
+                    isStartFromDomain : results[1] === 1
+                  },
+                  link : {
+                    isStartFromHost : results[2] === 1,
+                    isStartFromDomain : results[3] === 1
+                  }
 
-         }
-      );
-    });
+               }
+            );
 
+         });
 };
 
 
