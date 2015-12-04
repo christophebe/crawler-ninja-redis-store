@@ -32,7 +32,10 @@ Store.prototype.checkInCrawlHistory = function(url, callback) {
             .sismember(SET_HISTORY, url)
             .sadd(SET_HISTORY, url)
             .exec(function (error, result) {
-               callback(error, result[0] === 1);
+              if (error) {
+                return callback(error);
+              }
+               callback(null, result[0] === 1);
              });
 };
 
@@ -51,6 +54,9 @@ Store.prototype.removeFromHistory = function(url, callback) {
 Store.prototype.getDepth = function (url, callback) {
 
   this.client.hget(HASH_DEPTH, url, function(error, value){
+      if (error) {
+          return callback(error);
+      }
 
       if (value === null) {
         value = 0;
@@ -58,7 +64,7 @@ Store.prototype.getDepth = function (url, callback) {
       else {
         value = Number(value);
       }
-      callback(error, value);
+      callback(null, value);
   });
 
 };
@@ -87,7 +93,6 @@ Store.prototype.isStartFromUrl = function(parentUri, link, callback) {
         .sismember(SET_START_FROM_DOMAINS, URI.domain(link))
         .exec(function (error, results) {
 
-            //console.log("RESULT >>", results);
             if (error) {
               return callback(error);
             }
