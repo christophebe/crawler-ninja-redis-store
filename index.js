@@ -84,11 +84,11 @@ Store.prototype.addStartUrls = function(urls, callback) {
 };
 
 
-Store.prototype.isStartFromUrl = function(parentUri, link, callback) {
+Store.prototype.isStartFromUrl = function(parentUrl, link, callback) {
 
     this.client.multi()
-        .sismember(SET_START_FROM_HOSTS, URI.host(parentUri))
-        .sismember(SET_START_FROM_DOMAINS, URI.domain(parentUri))
+        .sismember(SET_START_FROM_HOSTS, URI.host(parentUrl))
+        .sismember(SET_START_FROM_DOMAINS, URI.domain(parentUrl))
         .sismember(SET_START_FROM_HOSTS, URI.host(link))
         .sismember(SET_START_FROM_DOMAINS, URI.domain(link))
         .exec(function (error, results) {
@@ -98,7 +98,7 @@ Store.prototype.isStartFromUrl = function(parentUri, link, callback) {
             }
             callback(null,
                 {
-                  parentUri : {
+                  parentUrl : {
                     isStartFromHost : results[0] === 1,
                     isStartFromDomain : results[1] === 1
                   },
