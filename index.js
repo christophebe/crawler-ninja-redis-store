@@ -24,7 +24,7 @@ var Store = function (params) {
  *  and add it if it is not yet in the history
  *
  * @param the url to check
- * @param callback(error, true/false), true means that the uri is in the history
+ * @param callback(error, true/false), true means that the url is in the history
  *
  */
 Store.prototype.checkInCrawlHistory = function(url, callback) {
